@@ -1,12 +1,8 @@
 import re, glob, os
 from datetime import date, datetime
-import requests
-import json
 import csv
 import pandas as pd
 from matplotlib import pyplot as plt
-
-IP_ACCESS_KEY = '4cc7ad099f16d186abc49a8063df1fb0'
 
 ## Set up
 tdy = str(date.today())
@@ -50,7 +46,7 @@ for db_row in db_reader:
 dblist = list(dbs.keys())
 
 weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-months = {'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
+months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
 output.write('Date,Weekday,Hour,IP,Location,Requested_url')
 
@@ -63,20 +59,6 @@ for filename in glob.glob(os.path.join(ezproxy_logs, '*')):
   for line in lines:
     log = line.split()
     ip = log[0]
-#    response = requests.get('http://api.ipstack.com/{0}?access_key={1}'.format(ip, IP_ACCESS_KEY))
-#    geolocation = json.loads(response.text)
-#    if geolocation['country_name'] == 'None':
-#      country = 'Unknown'
-#    else:
-#      country = geolocation['country_name']
-#    if geolocation['region_name'] == 'None':
-#      state == 'Unknown'
-#    else:
-#      state = geolocation['region_name']
-#    if geolocation['city'] == 'None':
-#      city == 'Unknown'
-#    else:
-#      city = geolocation['city']
     timestamp = log[1]
     timestamp = timestamp[1:]
     ts = timestamp.split('/')
@@ -89,10 +71,6 @@ for filename in glob.glob(os.path.join(ezproxy_logs, '*')):
     weekday_no = datetime(int(year), month_no, int(ddate)).weekday()
     weekday = weekdays[weekday_no]
     username = log[3]
-#    if username in users:
-#      status = users[username]
-#    else:
-#      status = 'Unknown'
     location = log[6]
     if location == 'local':
       location = 'In Library'
@@ -108,8 +86,8 @@ for filename in glob.glob(os.path.join(ezproxy_logs, '*')):
     referring_url = re.sub('https:\/\/login.ezproxy1.salpublib.org\/login\?qurl=', '', referring_url)
     referring_url = re.sub('http:\/\/ezproxy1.salpublib.org:2048\/login\?qurl', '', referring_url)
     referring_url = re.sub('.ezproxy1.salpublib.org', '', referring_url)
-    referring_url = referring_url.split('=',1)[0]
-    referring_url = referring_url.split('%',1)[0]
+##    referring_url = referring_url.split('=',1)[0]
+##    referring_url = referring_url.split('%',1)[0]
     ref = 'Unknown'
     if referring_url == '':
       ref = 'EZproxy Login'
@@ -122,8 +100,8 @@ for filename in glob.glob(os.path.join(ezproxy_logs, '*')):
     requested_url = re.sub('https:\/\/ezproxy1.salpublib.org\/login\?qurl=', '', requested_url)
     requested_url = re.sub('http:\/\/ezproxy1.salpublib.org:2048\/login\?qurl', '', requested_url)
     requested_url = re.sub('.ezproxy1.salpublib.org', '', requested_url)
-    requested_url = requested_url.split('=',1)[0]
-    requested_url = requested_url.split('%',1)[0]
+##    requested_url = requested_url.split('=',1)[0]
+##    requested_url = requested_url.split('%',1)[0]
     req = 'Unknown'
     if requested_url == '':
       req = 'EZproxy Login'
