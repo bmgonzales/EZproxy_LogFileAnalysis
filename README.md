@@ -24,6 +24,7 @@ Run the EZProxy-FY script to capture data for a larger period of time. This one 
 - pytz
 - numexpr
 - bottleneck
+
 **Matplotlib**
 - Python
 - FreeType
