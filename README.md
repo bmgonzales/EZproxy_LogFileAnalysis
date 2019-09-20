@@ -16,7 +16,7 @@ Run the EZProxy-PrevMonth script to capture the data from the previous month (th
 **Full year**
 Run the EZProxy-FY script to capture data for a larger period of time. This one doesn't create a By Day chart/table.
 
-## Required libaries & bependencies
+## Required libaries & dependencies
 **Pandas**
 - setuptools
 - NumPy
@@ -36,3 +36,19 @@ Run the EZProxy-FY script to capture data for a larger period of time. This one 
 - pyparsing
 
 ## How to use
+1. Install Anaconda and ensure that all the libraries/dependencies listed above are included
+2. Download files from Google Drive or Github
+3. Create a folder in root C:\ called Statistics
+4. Unpack files and move into root of C:\Statistics
+5. Inside C:\Statistics, create another folder ezproxy_logs.
+
+**Running the script**
+1. Copy any number of logs you want to analyze into C:\Statistics\ezproxy_logs
+2. Open the Python file you want to run in Spyder (the Python environment for Anaconda)
+3. Press the PLAY button and the script will go through the logs.
+4. When completed, you'll see the generated charts load in the bottom right console window.
+
+**Opening results**
+1. Navigate to C:\Statistics and find the folder the script generated with unpacked log stats.
+2. You can delete the [date].csv file generated if you don't want to keep the translated log data.
+3. Opening the [date].html file will display the generated charts and table results. The chart graphics are stored in the Charts folder.
