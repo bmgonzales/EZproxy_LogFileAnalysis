@@ -11,9 +11,10 @@ The full list of dependencies are listed below.
 I recommend installing Anaconda (https://www.anaconda.com/distribution/) to run the code and manage libraries
 
 ## Different report types
-**Previous month**
+**Previous month (usually just 1 log file)**
 Run the EZProxy-PrevMonth script to capture the data from the previous month (the script formats filenames and HTML based on the previous month)
-**Full year**
+
+**Full year (or several log files)**
 Run the EZProxy-FY script to capture data for a larger period of time. This one doesn't create a By Day chart/table.
 
 ## Required libaries & dependencies
