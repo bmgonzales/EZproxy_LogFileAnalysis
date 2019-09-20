@@ -10,21 +10,21 @@ The full list of dependencies are listed below.
 
 I recommend installing Anaconda (https://www.anaconda.com/distribution/) to run the code and manage libraries
 
-# Different Report Types
-## Previous Month
+## Different report types
+**Previous month**
 Run the EZProxy-PrevMonth script to capture the data from the previous month (the script formats filenames and HTML based on the previous month)
-## Full Year
+**Full year**
 Run the EZProxy-FY script to capture data for a larger period of time. This one doesn't create a By Day chart/table.
 
-# Required Libaries & Dependencies
-## Pandas
+## Required libaries & bependencies
+**Pandas**
 - setuptools
 - NumPy
 - python-dateutil
 - pytz
 - numexpr
 - bottleneck
-## Matplotlib
+**Matplotlib**
 - Python
 - FreeType
 - libpng
@@ -34,3 +34,5 @@ Run the EZProxy-FY script to capture data for a larger period of time. This one 
 - dateutil
 - kiwisolver
 - pyparsing
+
+## How to use
