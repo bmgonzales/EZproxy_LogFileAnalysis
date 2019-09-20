@@ -4,115 +4,131 @@ import csv
 import pandas as pd
 from matplotlib import pyplot as plt
 
-## Set up
+## Get the date
 tdy = str(date.today())
 year = tdy[2:4]
 m = int(tdy[5:7]) 
-#m = int(tdy[5:7]) - 1
+m = int(tdy[5:7]) - 1
 if len(str(m)) == 1:
   month = '0' + str(m)
 else:
   month = str(m)
+  
+# Create variables for filenames and titles
 stats = 'EZproxy_' + month + year
 stats_title = month + '/' + year
 
+# Location of directories to create for report files
 statdirs = 'C:\\Statistics\\' + stats
 chartdirs = 'C:\\Statistics\\' + stats + '\\charts\\'
 
+# Create the directories for report files
 os.makedirs(statdirs)
 os.makedirs(chartdirs)
 
+# Create files for report file and pretty log
 statfile = 'C:\\Statistics\\' + stats + '\\' + stats + '.csv'
 htmlfile = 'C:\\Statistics\\' + stats + '\\' + stats + '.html'
 
+# Open statfile to unpack
 output = open(statfile,'w')
 
+# Find userfile and open
 userfile = 'C:\\Statistics\\users.csv'
 user_reader = csv.reader(open(userfile, 'r'))
+
+# Create user array
+# We don't use this, but left the code and file intact just in case
 users = {}
 
 for user_row in user_reader:
   k, v = user_row
   users[k] = v
 
+# Find database file and open
 dbfile = 'C:\\Statistics\\dblist.csv'
 db_reader = csv.reader(open(dbfile, 'r'))
+
+# Create database array
 dbs = {}
 
-for db_row in db_reader:
-  a, b = db_row
+for db_row in db_reader: # For each row in the dblist.csv
+  a, b = db_row # Looks for rows in this format: URL key,Database Name i.e. EBSCOHost.com,EBSCO
   dbs[a] = b
 
+# Create keys for each row in database array to match with log
 dblist = list(dbs.keys())
 
+# Create weekday array list and months array list to translate for pretty log
 weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
+# Write row title for pretty log
+# IMPORTANT - This is used to identify columns for charts and tables
 output.write('Date,Weekday,Hour,IP,Location,Requested_url')
 
+# Find the EZProxy log folder to analyze files
 ezproxy_logs = 'C:\\Statistics\\ezproxy_logs\\'
 ezproxy_stats = []
 
-## Mine stats from EZproxy logfiles
-for filename in glob.glob(os.path.join(ezproxy_logs, '*')):
+## Unpack stats from EZproxy logfiles
+for filename in glob.glob(os.path.join(ezproxy_logs, '*')): # Looks for any files inside ezproxy_logs folder
   lines = [line.strip() for line in open(filename)]
   for line in lines:
     log = line.split()
-    ip = log[0]
-    timestamp = log[1]
-    timestamp = timestamp[1:]
+    
+## IP
+    ip = log[0] # IP address is in log array position 0 (first)
+    
+## date - weekday - hour
+    timestamp = log[1] # Timestamp is in log array position 1
+    timestamp = timestamp[1:] # Creates array of timestamp data to further split
     ts = timestamp.split('/')
-    ddate = ts[0]
-    month = ts[1]
-    month_no = months[month]
-    yeartime = ts[2]
+    ddate = ts[0] # Gets date from timestamp
+    month = ts[1] # Gets month from timestamp
+    month_no = months[month] # Converts month number to month name from list above
+    yeartime = ts[2] # Gets year from timestamp
     year = yeartime[0:4]
     hour = yeartime[5:7]
     weekday_no = datetime(int(year), month_no, int(ddate)).weekday()
     weekday = weekdays[weekday_no]
-    username = log[3]
-    location = log[6]
-    if location == 'local':
-      location = 'In Library'
-      country = 'United States'
-      state = 'Kansas'
-      city = 'Salina'
-    elif location == 'proxy':
-      location = 'Not In Library'
+    
+## username
+    username = log[3] # If found gets username from log array position 3 - This includes library card numbers; we aren't using this data for any reports
+    
+## location
+    location = log[6] # Gets location from log array position 6 - EZProxy writes local or proxy
+    if location == 'local': # Location is local if proxy wasn't used - checks blacklist IP range from EZProxy config
+      location = 'In Library' # Give a prettier name to local users
+    elif location == 'proxy': # Location is proxy if EZProxy was used
+      location = 'Not In Library' # Give a prettier name to proxy users
     else:
-      location = 'Unknown'
-    referring_url = log[5]
-    referring_url = re.sub('https:\/\/ezproxy1.salpublib.org\/login\?url=', '', referring_url)
-    referring_url = re.sub('https:\/\/login.ezproxy1.salpublib.org\/login\?qurl=', '', referring_url)
-    referring_url = re.sub('http:\/\/ezproxy1.salpublib.org:2048\/login\?qurl', '', referring_url)
-    referring_url = re.sub('.ezproxy1.salpublib.org', '', referring_url)
-##    referring_url = referring_url.split('=',1)[0]
-##    referring_url = referring_url.split('%',1)[0]
-    ref = 'Unknown'
-    if referring_url == '':
-      ref = 'EZproxy Login'
-    else:
-      for x in dblist:
-        if x in referring_url:
-          ref = dbs[x]
-    requested_url = log[5]
+      location = 'Unknown' # If neither is provided. Likely to occur in old log files
+
+## requested_url
+    requested_url = log[5] # Gets requested database URL from log array position 5
+    # Strip out various forms of the EZProxy URL from database list - we don't want it recorded
     requested_url = re.sub('https:\/\/ezproxy1.salpublib.org\/login\?url=', '', requested_url)
     requested_url = re.sub('https:\/\/ezproxy1.salpublib.org\/login\?qurl=', '', requested_url)
     requested_url = re.sub('http:\/\/ezproxy1.salpublib.org:2048\/login\?qurl', '', requested_url)
     requested_url = re.sub('.ezproxy1.salpublib.org', '', requested_url)
-##    requested_url = requested_url.split('=',1)[0]
-##    requested_url = requested_url.split('%',1)[0]
+# Breaks down the URL further. Commenting out to allow us to take bits of the way further down identifiers for databases
+#    requested_url = requested_url.split('=',1)[0]
+#    requested_url = requested_url.split('%',1)[0]
     req = 'Unknown'
     if requested_url == '':
       req = 'EZproxy Login'
     else:
-      for x in dblist:
+      for x in dblist: # Checks for URL key from dblist.csv
         if x in requested_url:
           req = dbs[x]
 
+    # Create new line
+    # Write translated data from old log file to new log file
     output.write('\n')
     output.write(str(ddate) + ',' + str(weekday) + ',' + str(hour) + ',' + str(ip) + ',' + str(location) + ',' + str(req))
 
+# Close new log file
 output.close()
 
 ## Create charts and HTML file
@@ -122,11 +138,13 @@ html.write('<html><head><title>EZproxy Logfile Analysis - ' + stats_title + '</t
 
 df = pd.read_csv(statfile)
 
+# Unique IP address count
 ip_count = df["IP"].nunique()
 title11 = 'Unique Users by IP'
 html.write('<div class="row"><center><h2>' + title11 + '</h2><br>')
 html.write(str(ip_count) + '<br><br></div>')
 
+# ByDay chart/table
 byday = df.groupby('Date').Weekday.count().reset_index()
 byday = byday.sort_index(ascending=True)
 byday.rename(columns={'Date':'Date', 'Weekday':'Sessions'},inplace=True)
@@ -150,6 +168,7 @@ plt.savefig(chartdirs + 'byday.png')
 html.write('<div class="row"><center><h2>' + title1 + '</h2><img src="charts/byday.png" /><br><br><br>')
 html.write(byday.to_html() + '<br><br></div>')
 
+# ByWeekDay chart/table
 days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 byweekday = df.groupby('Weekday').Date.count().reindex(days).reset_index()
 byweekday = byweekday.sort_index(ascending=True)
@@ -174,6 +193,7 @@ plt.savefig(chartdirs + 'byweekday.png')
 html.write('<div class="row"><center><h2>' + title2 + '</h2><img src="charts/byweekday.png" /><br><br><br>')
 html.write(byweekday.to_html() + '<br><br></div>')
 
+# ByHour chart/table
 byhour = df.groupby('Hour').Date.count().reset_index()
 byhour = byhour.sort_index(ascending=True)
 byhour.rename(columns={'Hour':'Hour', 'Date':'Sessions'},inplace=True)
@@ -197,75 +217,13 @@ plt.savefig(chartdirs + 'byhour.png')
 html.write('<div class="row"><center><h2>' + title3 + '</h2><img src="charts/byhour.png" /><br><br><br>')
 html.write(byhour.to_html() + '<br><br></div>')
 
-#bycountry = df.groupby('Country').Date.count().reset_index()
-#bycountry = bycountry.sort_values('Date',ascending=False)
-#bycountry.rename(columns={'Country':'Country', 'Date':'Sessions'},inplace=True)
-#bycountry['Percent'] = bycountry.Sessions / bycountry.Sessions.sum()
-#bycountry.Percent = bycountry.Percent.apply(lambda x: str(x)[2:4] + '.' + str(x)[4] + '%')
-#country_keys = bycountry.Country.tolist()
-#country_values = bycountry.Sessions.tolist()
-#title4 = 'EZproxy Sessions by Country'
-#
-#plt.figure(figsize = (8,6))
-#ax4 = plt.subplot()
-#plt.barh(range(len(country_values)), country_values, align='center', alpha=0.5, color='#0E6251')
-#ax4.set_yticks(range(len(country_keys)))
-#ax4.set_yticklabels(country_keys)
-#ax4.set_xlabel('EZproxy Sessions')
-#plt.tight_layout()
-#plt.subplots_adjust(top=0.88)
-#plt.title(title4)
-#plt.savefig(chartdirs + 'bycountry.png')
-#
-#html.write('<div class="row"><center><h2>' + title4 + '</h2><img src="charts/bycountry.png" /><br><br><br>')
-#html.write(bycountry.to_html() + '<br><br></div>')
+# Removed ByCountry chart/table
 
-#bystate = df.groupby('State').Date.count().reset_index()
-#bystate = bystate.sort_values('Date',ascending=False).head(10)
-#bystate.rename(columns={'State':'State', 'Date':'Sessions'},inplace=True)
-#bystate['Percent'] = bystate.Sessions / bystate.Sessions.sum()
-#bystate.Percent = bystate.Percent.apply(lambda x: str(x)[2:4] + '.' + str(x)[4] + '%')
-#state_keys = bystate.State.tolist()
-#state_values = bystate.Sessions.tolist()
-#title5 = 'EZproxy Sessions by State'
-#
-#plt.figure(figsize = (8,6))
-#ax5 = plt.subplot()
-#plt.barh(range(len(state_values)), state_values, align='center', alpha=0.5, color='#7D6608')
-#ax5.set_yticks(range(len(state_keys)))
-#ax5.set_yticklabels(state_keys)
-#ax5.set_xlabel('EZproxy Sessions')
-#plt.tight_layout()
-#plt.subplots_adjust(top=0.88)
-#plt.title(title5)
-#plt.savefig(chartdirs + 'bystate.png')
-#
-#html.write('<div class="row"><center><h2>' + title5 + '</h2><img src="charts/bystate.png" /><br><br><br>')
-#html.write(bystate.to_html() + '<br><br></div>')
+# Removed ByState chart/table
 
-#bycity = df.groupby('City').Date.count().reset_index()
-#bycity = bycity.sort_values('Date',ascending=False).head(10)
-#bycity.rename(columns={'City':'City', 'Date':'Sessions'},inplace=True)
-#bycity['Percent'] = bycity.Sessions / bycity.Sessions.sum()
-#bycity.Percent = bycity.Percent.apply(lambda x: str(x)[2:4] + '.' + str(x)[4] + '%')
-#city_keys = bycity.City.tolist()
-#city_values = bycity.Sessions.tolist()
-#title6 = 'EZproxy Sessions by City'
-#
-#plt.figure(figsize = (8,6))
-#ax6 = plt.subplot()
-#plt.barh(range(len(city_values)), city_values, align='center', alpha=0.5, color='#6E2C00')
-#ax6.set_yticks(range(len(city_keys)))
-#ax6.set_yticklabels(city_keys)
-#ax6.set_xlabel('EZproxy Sessions')
-#plt.tight_layout()
-#plt.subplots_adjust(top=0.88)
-#plt.title(title6)
-#plt.savefig(chartdirs + 'bycity.png')
-#
-#html.write('<div class="row"><center><h2>' + title6 + '</h2><img src="charts/bycity.png" /><br><br><br>')
-#html.write(bycity.to_html() + '<br><br></div>')
+# Removed ByCity chart/table
 
+# ByLocation chart/table
 bylocation = df.groupby('Location').Date.count().reset_index()
 bylocation = bylocation.sort_values('Date',ascending=False)
 bylocation.rename(columns={'Location':'Location', 'Date':'Sessions'},inplace=True)
@@ -289,29 +247,9 @@ plt.savefig(chartdirs + 'bylocation.png')
 html.write('<div class="row"><center><h2>' + title7 + '</h2><img src="charts/bylocation.png" /><br><br><br>')
 html.write(bylocation.to_html() + '<br><br></div>')
 
-#bystatus = df.groupby('Status').Date.count().reset_index()
-#bystatus = bystatus.sort_values('Date',ascending=False)
-#bystatus.rename(columns={'Status':'Status', 'Date':'Sessions'},inplace=True)
-#bystatus['Percent'] = bystatus.Sessions / bystatus.Sessions.sum()
-#bystatus.Percent = bystatus.Percent.apply(lambda x: str(x)[2:4] + '.' + str(x)[4] + '%')
-#status_keys = bystatus.Status.tolist()
-#status_values = bystatus.Sessions.tolist()
-#title8 = 'EZproxy Sessions by OLLU Status'
-#
-#plt.figure(figsize = (8,6))
-#ax8 = plt.subplot()
-#plt.barh(range(len(status_values)), status_values, align='center', alpha=0.5, color='#58D68D')
-#ax8.set_yticks(range(len(status_keys)))
-#ax8.set_yticklabels(status_keys)
-#ax8.set_xlabel('EZproxy Sessions')
-#plt.tight_layout()
-#plt.subplots_adjust(top=0.88)
-#plt.title(title8)
-#plt.savefig(chartdirs + 'bystatus.png')
-#
-#html.write('<div class="row"><center><h2>' + title8 + '</h2><img src="charts/bystatus.png" /><br><br><br>')
-#html.write(bystatus.to_html() + '</div>')
+# Removed ByStatus chart/table
 
+# Requested_URL chart/able
 req_urls = df.groupby('Requested_url').Date.count().reset_index()
 req_urls = req_urls.sort_values('Date',ascending=False)
 req_urls.rename(columns={'Requested_url':'Requested_url', 'Date':'Sessions'},inplace=True)
@@ -335,29 +273,7 @@ plt.savefig(chartdirs + 'req.png')
 html.write('<div class="row"><center><h2>' + title9 + '</h2><br><img src="charts/req.png" /><br>')
 html.write(req_urls.to_html() + '<br><br></div>')
 
-#ref_urls = df.groupby('Referring_url').Date.count().reset_index()
-#ref_urls = ref_urls.sort_values('Date',ascending=False)
-#ref_urls.rename(columns={'Referring_url':'Referring_url', 'Date':'Sessions'},inplace=True)
-#ref_urls['Percent'] = ref_urls.Sessions / ref_urls.Sessions.sum()
-#ref_urls.Percent = ref_urls.Percent.apply(lambda x: str(x)[2:4] + '.' + str(x)[4] + '%')
-#ref_keys = ref_urls.Referring_url.tolist()
-#ref_values = ref_urls.Sessions.tolist()
-#title10 = 'Referring URLs'
-#
-#plt.figure(figsize = (8,6))
-#ax10 = plt.subplot()
-#plt.barh(range(len(ref_values)), ref_values, align='center', alpha=0.5, color='#3498DB')
-#ax10.set_yticks(range(len(ref_keys)))
-#ax10.set_yticklabels(ref_keys)
-#ax10.set_xlabel('EZproxy Sessions')
-#plt.tight_layout()
-#plt.subplots_adjust(top=0.88)
-#plt.title(title10)
-#plt.savefig(chartdirs + 'ref.png')
-#
-#html.write('<div class="row"><center><h2>' + title10 + '</h2><img src="charts/ref.png" /><br><br><br>')
-#html.write(ref_urls.to_html() + '<br><br></div>')
-
+# Removed Referring_URLs chart/table
 
 html.write('</div></body></html>')
 html.close()
