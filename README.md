@@ -36,6 +36,7 @@ Run the EZProxy-FY script to capture data for a larger period of time. This one 
 - pyparsing
 
 ## How to use
+**Setup Python**
 1. Install Anaconda and ensure that all the libraries/dependencies listed above are included
 2. Download files from Google Drive or Github
 3. Create a folder in root C:\ called Statistics
